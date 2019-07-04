@@ -1,0 +1,99 @@
+#Homework 7
+# The output that I got after running this code.   Celery raw,Frozen Broccoli,Lettuce,Oranges,Poached eggs, 
+# and Popcorn air popped were the item of choice. We found optimal solution equaling to 4.33 dollars
+import pandas as df
+from pulp import *
+
+Adata= df.read_excel("dietSummer2018.xls")
+Adata=Adata[0:64]
+foods=Adata['Foods']
+foods=foods.values.tolist()
+Adata=Adata.values.tolist()
+
+
+
+calories= dict([(x[0],float(x[3])) for x in Adata])
+chol= dict([(x[0],float(x[4])) for x in Adata])
+total_fat= dict([(x[0],float(x[5])) for x in Adata])
+sodium= dict([(x[0],float(x[6])) for x in Adata])
+carbs= dict([(x[0],float(x[7])) for x in Adata])
+fiber= dict([(x[0],float(x[8])) for x in Adata])
+protein= dict([(x[0],float(x[9])) for x in Adata])
+vit_a= dict([(x[0],float(x[10])) for x in Adata])
+vit_c= dict([(x[0],float(x[11])) for x in Adata])
+calcium= dict([(x[0],float(x[12])) for x in Adata])
+iron= dict([(x[0],float(x[13])) for x in Adata])
+
+
+
+
+cost=dict([(x[0],float(x[1])) for x in Adata])
+
+prob= LpProblem("Diet Problem", LpMinimize)
+
+
+
+
+
+food_var=LpVariable.dicts("Foods", foods,0, cat='Continuous')
+
+
+chosenVars=LpVariable.dicts("Chosen",foods,0,1, cat='Binary')
+
+
+
+
+
+
+
+prob += lpSum([cost[i]*food_var[i] for i in foods]), "Total Cost of foods "
+
+
+
+for f in foods:
+    prob += 0.1*chosenVars[f] <= food_var[f]
+    prob += 1000000*chosenVars[f] >= food_var[f]
+
+
+prob += lpSum([calories[i] * food_var[i] for i in foods]) >=1500, 'min_calories'
+prob += lpSum([calories[i] * food_var[i] for i in foods]) <= 2500,'max calories'
+
+prob += lpSum([chol[i] * food_var[i] for i in foods]) >= 30, 'min cholesterol'
+prob += lpSum([chol[i] * food_var[i] for i in foods]) <= 240,'max cholesterol'
+
+prob += lpSum([total_fat[i] * food_var[i] for i in foods]) >= 20, 'min Fat'
+prob += lpSum([total_fat[i] * food_var[i] for i in foods]) <= 70, 'max Fat'
+
+prob += lpSum([sodium[i] * food_var[i] for i in foods])  >= 800, 'min sodium'
+prob += lpSum([sodium[i] * food_var[i] for i in foods]) <= 2000, 'max sodium'
+
+prob += lpSum([carbs[i] * food_var[i] for i in foods]) >= 130, 'min carbohydrates'
+prob += lpSum([carbs[i] * food_var[i] for i in foods]) <= 450, 'max carbohydrates'
+
+prob += lpSum([fiber[i] * food_var[i] for i in foods]) >= 125, 'min dietaryfiber'
+prob += lpSum([fiber[i] * food_var[i] for i in foods]) <= 250, 'max dietaryfiber'
+
+prob += lpSum([protein[i] * food_var[i] for i in foods]) >= 60, 'min protein'
+prob += lpSum([protein[i] * food_var[i] for i in foods]) <= 100, 'max protein'
+
+prob += lpSum([vit_a[i] * food_var[i] for i in foods]) >= 1000, 'min vitA'
+prob += lpSum([vit_a[i] * food_var[i] for i in foods]) <= 10000, 'max vitA'
+
+prob += lpSum([vit_c[i] * food_var[i] for i in foods]) >= 400, 'min vitC'
+prob += lpSum([vit_c[i] * food_var[i] for i in foods])  <= 5000, 'max vitC'
+
+prob += lpSum([calcium[i] * food_var[i] for i in foods]) >= 700, 'min calcium'
+prob += lpSum([calcium[i] * food_var[i] for i in foods]) <= 1500, 'max calcium'
+
+prob += lpSum([iron[i] * food_var[i] for i in foods]) >= 10, 'min iron'
+prob += lpSum([iron[i] * food_var[i] for i in foods]) <= 40, 'max iron'
+
+
+
+
+prob.solve()
+
+for v in prob.variables():
+    print(v.name, "=", v.varValue)
+
+print("Total Cost of foods  = ", value(prob.objective))

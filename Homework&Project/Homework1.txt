@@ -1,0 +1,87 @@
+# 
+# Safin Salih
+# 5/19/2018
+# Below I put together Questions 2.1,2.2 and 2.3 all together with the code.
+
+# Question 2.1:
+#   Suppose  I was interested in classifying  a Girlfriend/Boyfriend  whether  she/he is cheating or not. Here are some possible predictors  :
+#   Age?
+#   Race?
+#   Sex?
+#   There current relationship status on Facebook?
+#   How many times she/he cheated in the past? 
+#   How many partners this person have had?
+#   How many of the opposite sex does this person have as friends?
+
+##
+##
+rm(list=ls())
+library(kernlab)
+set.seed(42)
+## loading my data  and naming it my_data
+my_data<-read.table("2.2credit_card_dataSummer2018.txt",stringsAsFactors = FALSE,header =FALSE)
+
+## Using the ksvm() function in kernlab, I let data= data my_data, I let my predicted  variable to be V11, while others being predictors. 
+## The tough part was choosing the correct C value. When C is small, we have a narrow margin
+## in other words it finds the classifier that highly fits to the data.
+## when C is larger, margin is wider, we allow more misclassifiction but has lower variance. 
+## I chose mine to be C=38, it was a good middle ground, Plus I did cross-validation before the problem to get the
+## approriate value for C, and it showed 28 and 38 were very good values.
+##
+Ksm_model <- ksvm(my_data$V11~.,data=my_data,type="C-svc",kernal="vanilladot",C=38)
+Ksm_model
+
+
+
+
+a <- colSums(Ksm_model@xmatrix[[1]] * Ksm_model@coef[[1]])
+## As shown on the Video, this will give our coeffients for  our classifier minus b value
+## a_1, a_2 a_3..... a_10
+## -7.7897270 -32.9683343  -0.9429919  45.1893315  34.5764369 -12.8073101  12.6408635 -16.2381413 -46.0488374  42.4010424 
+a 
+a0<- -Ksm_model@b
+## And a_0, is our b value, 0.6245077
+a0
+
+## next we will try to predict the set of data based on our model .
+pred <- predict(Ksm_model,my_data)
+
+pred
+
+## And here is how accurate our data was 0.9357798
+sum(pred==my_data$V11) / nrow(my_data)
+
+
+  
+## For question 3.1, We are doing K-nearest neighobr   
+my_data2<-read.table("2.2credit_card_dataSummer2018.txt",stringsAsFactors = FALSE,header =FALSE)
+library(kknn)
+#create an empty vector of the same dimentions as our data with each element equalling to zero#
+pred_knn<-(rep(0,nrow(my_data2)))
+
+
+# Next, we'll iteratate through each same of the data matrix, and classify each point with its nearest k=12 points via euclidean distance. 
+for (i in 1:nrow(my_data2))
+{
+  knnmodel= kknn(V11~V1+V2+V3+V4+V5+V6+V7+V8+V9+V10,my_data2[-i,],my_data2[i,],k=12,scale = TRUE)
+  pred_knn[i] <- as.integer(fitted(knnmodel)+0.5)
+}
+
+sum(pred_knn==my_data$V11) / nrow(my_data)
+
+## Next for my own purpose, I will like to see the difference of values (y variable values) from our ksm model and our knnmodel. 
+##
+ksmx=0
+knnx=0
+for(i in 1:654)
+{
+  ksmx<-pred[i]+ksmx
+  knnx<-pred_knn[i]+knnx
+}
+
+## As you can see, the knn model and ksm model, are only 6 points apart. And we take the difference of vectors and take absolute value.
+
+
+
+
+              
